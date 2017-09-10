@@ -6,6 +6,8 @@ import jieba.posseg as pseg
 import matplotlib as mpl
 from nltk.probability import FreqDist
 from nltk.text import Text
+import jieba.analyse
+
 #把停用词做成字典
 stopwords = {}
 fstop = open('stop_words.txt', 'r',encoding='utf-8')
@@ -14,13 +16,12 @@ for eachWord in fstop:
 fstop.close()
 
 def splitSentence(inputFile, outputFile):
-	#把停用词做成字典
-	stopwords = {}
-	fstop = open('stop_words.txt', 'r',encoding='utf-8')
-	for eachWord in fstop:
-		stopwords[eachWord.strip()] = eachWord.strip()
-	fstop.close()
-
+	# #把停用词做成字典
+	# stopwords = {}
+	# fstop = open('stop_words.txt', 'r',encoding='utf-8')
+	# for eachWord in fstop:
+	# 	stopwords[eachWord.strip()] = eachWord.strip()
+	# fstop.close()
 
 	fin = open(inputFile, 'r',encoding='utf-8')									#以读的方式打开文件  
 	fout = open(outputFile, 'w',encoding='utf-8')								#以写得方式打开文件  
@@ -51,7 +52,7 @@ def getSentence(inputFile):
 			# 	if word not in stopwords:  
 			# 		outStr += word  
 			# 		outStr += ' '  
-			sentence += line1.strip()
+			sentence += line1.strip()+"\n"
 		fin.close()  
 	except:
 		print('there is a mistak in {}'.format(inputFile))
@@ -75,26 +76,42 @@ for i in range(nrows)[1:]:
 words = ''
 for stock in stocks:
 	print(stock)
-	# splitSentence('sz50/'+stock+".txt",'sz50/'+stock+"_split.txt")
-	words += getSentence('sz50/'+stock+".txt")
-	# print(ws)
-	# words.extend(ws)
-print(words)
-print('-------------------------------------------------------------------------------------------')
-texts = jieba.cut(words)                        #用结巴分词，对每行内容进行分词  
-print(texts)
+	try:
+		# splitSentence('sz50/'+stock+".txt",'sz50/'+stock+"_split.txt")
+		words += getSentence('sz50/'+stock+".txt")+"\n"
+	except:
+		continue
 
-print('+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
+tags = jieba.analyse.extract_tags(words,topK=100)
+for t in tags:
+	print(t)
 
-text = Text(texts)
-fdist1 = FreqDist(text)
+# print(words)
+# print('-------------------------------------------------------------------------------------------')
+# texts = jieba.cut(words)                        #用结巴分词，对每行内容进行分词  
+# # print(texts)
+
+# # print('+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
+
+# text = Text(texts)
+# fdist1 = FreqDist(text)
 # print(fdist1)
 # print(fdist1.N())
+# print('+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
 # vocabulary1 = list(fdist1.keys())
+# sortedvocabulary = []
 # for v in vocabulary1:
-#     print(v)
+#     # print(v+"\t"+str(fdist1[v]))
+#     if v not in stopwords:
+#     	sortedvocabulary.append((v,fdist1[v]))
 
-for sample in fdist1:
-	print(sample)
+# sortedvocabulary = sorted(sortedvocabulary,key=lambda item:item[1],reverse=True)
+
+# for k in sortedvocabulary:
+# 	print(k[0]+"\t"+str(k[1]))
+# 	# print(k)
+
+# for sample in fdist1:
+# 	print(sample)
 # fdist1.tabulate()
 # fdist1.plot()

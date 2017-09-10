@@ -57,7 +57,7 @@ for st in stocks[0:]:
 		commentCounts.setdefault(str(st),int(total))
 	except:
 		continue
-# print(len(commentCounts))
+		
 commentCounts = sorted(dict2list(commentCounts), key=lambda d:d[1], reverse = True)
 stockPages = {} # 股票总页数字典
 # print(len(commentCounts))
