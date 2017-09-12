@@ -1,6 +1,7 @@
 import xlrd
 import datetime
 import csv
+import math
 
 def dict2list(dic:dict):
     ''' 将字典转化为列表 '''
@@ -92,11 +93,16 @@ for k in stocks.keys():
 			# 	continue
 		for t in emotions.keys():
 			emotionlist = emotions[t]
-			average_emotion = 0
+			buy = 0
+			sell = 0
 			for emotion in emotionlist:
-				average_emotion += emotion
+				if emotion > 0:
+					buy += 1
+				else:
+					sell += 1
 			# print(k+","+t+","+str(average_emotion))
-			emotion_data.setdefault(t,average_emotion)
+			emotion_ln =  math.log((1+buy)/(1+sell),math.e)
+			emotion_data.setdefault(t,emotion_ln)
 		emotion_datas.setdefault(k,emotion_data)
 	except:
 		continue
