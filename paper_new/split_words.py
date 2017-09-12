@@ -9,12 +9,12 @@ def save2csv(csvName,list):
 	print(path)
 	csvFile = open(path, 'w',encoding='utf-8',newline='')
 	writer = csv.writer(csvFile)
-	writer.writerow(('标题','帖子数','日期','情感'))
+	writer.writerow(('标题','帖子数','回帖数','时间','情感'))
 	for l in list:
 		writer.writerow(l)
 
 # filepath = 'comment_list.txt' # 评论
-filepath = 'sz50_comment_list_2017_09_05_01_11_37_677425.txt' # 新闻
+filepath = 'sz50_comment_list_2017_09_06_03_25_52_881713.txt' # 新闻
 f = open(filepath,"r",encoding='utf-8')
 lines = f.readlines() #读取全部内容
 i = 0
