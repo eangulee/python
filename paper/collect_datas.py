@@ -45,7 +45,7 @@ sz_datas = {} # 上证收盘数据
 for i in range(nrows)[1:]:	
 	d = xlrd.xldate.xldate_as_datetime(table.cell(i,0).value,0)
 	if(d >= startdate):
-		dstr = d.strftime('%x')
+		dstr = d.strftime('%Y-%m-%d')
 		# print(dstr+":"+str(table.cell(i,4).value))
 		sz_datas.setdefault(dstr,table.cell(i,4).value)
 
@@ -56,9 +56,10 @@ for k in stocks.keys():
 	lines = getcsv(r"./stock_spider/dataWithName/{}.csv".format(k))
 	for line in lines[1:]:		
 		d = datetime.datetime.strptime(line[0], "%Y-%m-%d")
-		dstr = d.strftime('%x')
-		# print(dstr+":"+str(line[4]))
-		stock_data.setdefault(dstr,line[4])	
+		if(d >= startdate):
+			dstr = d.strftime('%Y-%m-%d')
+			# print(dstr+":"+str(line[4]))
+			stock_data.setdefault(dstr,line[4])	
 	stock_datas.setdefault(k,stock_data)
 
 emotion_datas = {} # 情感得分
@@ -72,7 +73,7 @@ for k in stocks.keys():
 			length = len(line)
 			# try:
 			d = datetime.datetime.strptime(line[length-2].split()[0], "%Y-%m-%d")
-			dstr = d.strftime('%x')
+			dstr = d.strftime('%Y-%m-%d')
 			# print(dstr+":"+str(line[length-1]))
 			# stock_data.setdefault(dstr,line[4])
 			if(dstr not in emotions.keys()):
