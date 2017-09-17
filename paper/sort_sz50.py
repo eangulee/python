@@ -22,25 +22,27 @@ def dict2list(dic:dict):
     lst = [(key, val) for key, val in zip(keys, vals)]
     return lst
 
-xlsfile = r'D:\python\paper\sz50.xlsx' # 上证50股票名单
-data = xlrd.open_workbook(xlsfile)
-table = data.sheets()[0]          #通过索引顺序获取
-# cols = table.col_values(2)
-nrows = table.nrows
-stocks = []
-stocks2 = {}
-for i in range(nrows)[1:]:
-	stock = str(table.cell(i,1).value)
-	stock = stock.replace('.0','')
-	if(len(stock) < 6):# 股票代码为6位
-		diff = 6 - len(stock)
-		for j in range(diff):
-			stock = '0' + stock
-	# print(stock)
-	stocks.append(stock)
-	stocks2.setdefault(stock,table.cell(i,0).value)
+# xlsfile = r'D:\python\paper\sz50.xlsx' # 上证50股票名单
+# data = xlrd.open_workbook(xlsfile)
+# table = data.sheets()[0]          #通过索引顺序获取
+# # cols = table.col_values(2)
+# nrows = table.nrows
+# stocks = []
+# stocks2 = {}
+# for i in range(nrows)[1:]:
+# 	stock = str(table.cell(i,1).value)
+# 	stock = stock.replace('.0','')
+# 	if(len(stock) < 6):# 股票代码为6位
+# 		diff = 6 - len(stock)
+# 		for j in range(diff):
+# 			stock = '0' + stock
+# 	# print(stock)
+# 	stocks.append(stock)
+# 	stocks2.setdefault(stock,table.cell(i,0).value)
 # for k in stocks2.keys():
 # 	print(k+":"+stocks2[k])
+stocks = ['601939']
+stocks2 ={'601939':'建设银行'}
 commentCounts = {}
 i = 1
 for st in stocks[0:]:
@@ -106,9 +108,49 @@ for k in stockPages.keys():
 				datestr = commentsoup.find_all('div',class_='zwfbtime')[0]
 				# print(datestr.text)
 				datestr = datestr.text[4:23]
+				zwcontentmain = commentsoup.find_all('div',class_='zwcontentmain')[0]
+				zwcontentmainstr = zwcontentmain.text.strip()
+				# print('zwcontentmain:'+zwcontentmainstr)
+
+				# 获取发帖用户信息
+				zwconttbndiv = commentsoup.find_all("div",id='zwconttbn')[0]
+				# print(zwconttbndiv.prettify())
+				span = zwconttbndiv.find_all('span')[0]
+				uid = span.attrs['data-uid']
+				# print(uid)
+				userurl = 'http://iguba.eastmoney.com/{}'.format(uid)
+				userhtml = getHTMLtext(userurl)
+				usersoup = BeautifulSoup(userhtml,'html.parser')
+
+				userdiv = usersoup.find_all('div',id='influence')[0]
+				# print(userdiv.prettify())
+				userspan = userdiv.find_all('span')[0]
+				influencestr = userspan.attrs['data-influence']
+				influence = float(influencestr) / 2
+				print(influence) 
+
+				# http://iguba.eastmoney.com/
+				# for span in spans:
+				# 	print(span.prettify())
+				# 	spanclass = span.attrs['class']
+				# 	# <span class="stars stars35"></span>
+				# 	if('stars stars' in spanclass):
+				# 		# print(spanclass)
+				# 		star = spanclass.replace('stars stars','')
+						# print(star)
+				# for span in spans:
+				# 	print(span.text)
+				# print(influence)
+				# spans = influence.find_all('span')
+				# print(len(spans))
+
+				# classstr = stars.attrs['class']
+				# print(classstr)
+				# print('stars:'+str(classstr[-1]))
+
 				# print(datestr)
-				line = link.text+","+read.text+","+feedback.text+","+datestr
-				print(line)
+				line = link.text.replace(',',"，")+","+read.text+","+feedback.text+","+str(len(zwcontentmainstr))+","+str(influence)+","+datestr
+				# print(line)
 				titles.append(line)
 				urls.append(commenturl)
 			except Exception as e:
@@ -119,7 +161,7 @@ for k in stockPages.keys():
 	i = i + 1
 
 time = re.sub(r'[^0-9]','_',str(datetime.datetime.now()))
-output_file = u'D:\python\paper\sz50_comment_list_{0}.txt'.format(time)
+output_file = u'D:\python\python\paper\sz50_comment_list_{0}.txt'.format(time)
 print(output_file)
 
 i = 1
@@ -128,7 +170,8 @@ with open(output_file,'a',encoding='utf-8') as f:
 		titles = comments[k]
 		name = stocks2[k]
 		f.write('{}.{}:'.format(i,name) + '\n')
+		f.write('标题,阅读,评论,字数,影响力,时间')
 		for title in titles:
-			f.write(title + '\n')			
+			f.write(title + '\n')
 		f.write('\n')
 		i = i + 1
