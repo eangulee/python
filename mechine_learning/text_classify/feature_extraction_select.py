@@ -35,8 +35,8 @@ def dict2list(dic:dict):
 
 # Python 文本挖掘：使用机器学习方法进行情感分析（一、特征提取和选择）
 # 把所有词作为特征
-def bag_of_words(words):
-	return dict([(word, True) for word in words])
+def bag_of_words(word):
+	return dict([(word, True)])
 
 # 把双词搭配（bigrams）作为特征
 def bigram(words, score_fn = BigramAssocMeasures.chi_sq, n=1000):

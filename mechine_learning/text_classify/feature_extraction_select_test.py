@@ -35,8 +35,8 @@ def dict2list(dic:dict):
 
 # Python 文本挖掘：使用机器学习方法进行情感分析（一、特征提取和选择）
 # 把所有词作为特征
-def bag_of_words(words):
-	return dict([(word, True) for word in words])
+def bag_of_words(word):
+	return dict([(word, True)])
 
 # 把双词搭配（bigrams）作为特征
 def bigram(words, score_fn = BigramAssocMeasures.chi_sq, n=1000):
@@ -156,7 +156,7 @@ def getwords(inputFile):
 	f = open(inputFile, 'r',encoding='utf-8')
 	words = []
 	for line in f:
-		ws = line.strip()
+		ws = line.split()
 		for w in ws:
 			words.append(w)
 	f.close()
@@ -180,18 +180,44 @@ if(size>neglen):
 pos = pos_review[:size]
 neg = neg_review[:size]
 
+# 使用所有词（单词）作为特征
 posFeatures = pos_features(pos,bag_of_words)
 negFeatures = neg_features(neg,bag_of_words)
 
+# for p in negFeatures:
+# 	print(p)
+
 # 把特征化之后的数据数据分割为开发集和测试集
 # 这里把前124个数据作为测试集，中间50个数据作为开发测试集，最后剩下的大部分数据作为训练集。可以根据自己的需求修改
-train = posFeatures[2000:]+negFeatures[2000:]
-devtest = posFeatures[2000:5000]+negFeatures[2000:5000]
-# test = posFeatures[:124]+negFeatures[:124]
+train = posFeatures[:1400]+negFeatures[:1400]
+devtest = posFeatures[1400:1600]+negFeatures[1400:1600]
+test = posFeatures[1500:1600]+negFeatures[1500:1600]
+# for t in devtest:
+# 	print(t)
 
 # Python 文本挖掘：使用机器学习方法进行情感分析（三、分类器及其准确度）
 # 分割人工标注的标签和数据
 dev, tag_dev = zip(*devtest) #把开发测试集（已经经过特征化和赋予标签了）分为数据和标签
+# for d in dev:
+# 	print(d)
+
+# def build_model(features):	
+# 	model = nltk.NaiveBayesClassifier.train(features)
+# 	return model
+
+# def probe_model(model,features,dataset_type='Train'):
+# 	accuracy = nltk.classify.accuracy(model,features)
+# 	print("\n"+dataset_type+"Accuracy = %0.2f"%(accuracy*100) + "%")
+
+# def show_features(model,no_features=5):
+# 	print("\nFeatures Importance")
+# 	print('========================\n')
+# 	print(model.show_most_informative_features(no_features))
+
+# model = build_model(train)
+# probe_model(model,train)
+# probe_model(model,devtest,'Dev')
+# show_features(model)
 
 # 使用训练集训练分类器；
 # 用分类器对开发测试集里面的数据进行分类，给出分类预测的标签；
@@ -234,11 +260,11 @@ negFeatures = neg_features(best_word_features)
 '''
 
 print('BernoulliNB`s accuracy is %f' %score(BernoulliNB()))
-# print('MultinomiaNB`s accuracy is %f' %score(MultinomialNB()))
-# print('LogisticRegression`s accuracy is %f' %score(LogisticRegression()))
-# print('SVC`s accuracy is %f' %score(SVC()))
-# print('LinearSVC`s accuracy is %f' %score(LinearSVC()))
-# print('NuSVC`s accuracy is %f' %score(NuSVC()))
+print('MultinomiaNB`s accuracy is %f' %score(MultinomialNB()))
+print('LogisticRegression`s accuracy is %f' %score(LogisticRegression()))
+print('SVC`s accuracy is %f' %score(SVC()))
+print('LinearSVC`s accuracy is %f' %score(LinearSVC()))
+print('NuSVC`s accuracy is %f' %score(NuSVC()))
 
 '''
 dimension = ['500','1000','1500','2000','2500','3000']
