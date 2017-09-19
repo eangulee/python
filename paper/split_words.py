@@ -22,7 +22,7 @@ def save2txt(fileName,list):
 	for l in list:
 		ofile.write(l+"\n")
 
-filepath = 'sz50_comment_list_2017_09_06_03_25_52_881713.txt' # 评论
+filepath = 'sz50_comment_list_2017_09_19_22_10_51_509944.txt' # 评论
 # filepath = 'sz50_comment_list_2017_09_06_03_25_52_881713.txt' # 新闻
 f = open(filepath,"r",encoding='utf-8')
 lines = f.readlines() #读取全部内容
@@ -58,5 +58,5 @@ for line in lines:
 		print(stockname)
 	i = i + 1
 	if(i == total):# 最后一行
-		# save2csv(stockname,newcomments)
-		save2txt(stockname,newcomments)
+		save2csv(stockname,newcomments)
+		# save2txt(stockname,newcomments)
