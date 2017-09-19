@@ -35,8 +35,8 @@ def dict2list(dic:dict):
 
 # Python 文本挖掘：使用机器学习方法进行情感分析（一、特征提取和选择）
 # 把所有词作为特征
-def bag_of_words(word):
-	return dict([(word, True)])
+def bag_of_words(words):
+	return dict([(word, True) for word in words])
 
 # 把双词搭配（bigrams）作为特征
 def bigram(words, score_fn = BigramAssocMeasures.chi_sq, n=1000):
@@ -48,7 +48,12 @@ def bigram(words, score_fn = BigramAssocMeasures.chi_sq, n=1000):
 def bigram_words(words, score_fn = BigramAssocMeasures.chi_sq, n=1000):
 	bigram_finder = BigramCollocationFinder.from_words(words)
 	bigrams = bigram_finder.nbest(score_fn, n)
-	return bag_of_words(words + bigrams)  #所有词和（信息量大的）双词搭配一起作为特征
+	newwords = []
+	for word in words:
+		newwords.append((word,))
+	# for b in bigrams:
+	# 	print(b)
+	return bag_of_words(newwords + bigrams)  #所有词和（信息量大的）双词搭配一起作为特征
 
 # 计算整个语料里面每个词的信息量
 def create_word_scores():
@@ -156,9 +161,8 @@ def getwords(inputFile):
 	f = open(inputFile, 'r',encoding='utf-8')
 	words = []
 	for line in f:
-		ws = line.split()
-		for w in ws:
-			words.append(w)
+		ws = line.split()		
+		words.append([(w) for w in ws])
 	f.close()
 	return words
 
@@ -181,24 +185,50 @@ pos = pos_review[:size]
 neg = neg_review[:size]
 
 # 使用所有词（单词）作为特征
-posFeatures = pos_features(pos,bag_of_words)
-negFeatures = neg_features(neg,bag_of_words)
+# posFeatures = pos_features(pos,bag_of_words)
+# negFeatures = neg_features(neg,bag_of_words)
+
+# 使用双词搭配作特征时的效果
+# posFeatures = pos_features(pos,bigram)
+# negFeatures = neg_features(neg,bigram)
+
+
+# 使用所有词（单词）加上双词搭配作特征的效果
+posFeatures = pos_features(pos,bigram_words)
+negFeatures = neg_features(neg,bigram_words)
+
+'''
+# 计算信息量丰富的词，并以此作为分类特征
+word_scores = create_word_scores()
+best_words = find_best_words(word_scores, 1500) #选择信息量最丰富的1500个的特征
+
+posFeatures = pos_features(best_word_features)
+negFeatures = neg_features(best_word_features)
+
+# 计算信息量丰富的词和双词搭配，并以此作为特征
+word_scores = create_word_bigram_scores()
+best_words = find_best_words(word_scores, 1500) #选择信息量最丰富的1500个的特征
+
+posFeatures = pos_features(best_word_features)
+negFeatures = neg_features(best_word_features)
+'''
 
 # for p in negFeatures:
 # 	print(p)
 
 # 把特征化之后的数据数据分割为开发集和测试集
 # 这里把前124个数据作为测试集，中间50个数据作为开发测试集，最后剩下的大部分数据作为训练集。可以根据自己的需求修改
-train = posFeatures[:1400]+negFeatures[:1400]
-devtest = posFeatures[1400:1600]+negFeatures[1400:1600]
-test = posFeatures[1500:1600]+negFeatures[1500:1600]
-# for t in devtest:
-# 	print(t)
+train = posFeatures[:400]+negFeatures[:400]
+devtest = posFeatures[400:500]+negFeatures[400:500]
+testset = posFeatures[500:548]+negFeatures[500:548]
+for t in train:
+	print(t)
 
 # Python 文本挖掘：使用机器学习方法进行情感分析（三、分类器及其准确度）
 # 分割人工标注的标签和数据
 dev, tag_dev = zip(*devtest) #把开发测试集（已经经过特征化和赋予标签了）分为数据和标签
-# for d in dev:
+test, tag_test = zip(*testset) #把测试集（已经经过特征化和赋予标签了）分为数据和标签
+# for d in devtest:
 # 	print(d)
 
 # def build_model(features):	
@@ -230,34 +260,9 @@ def score(classifier):
 	pred = classifier.classify_many(dev)
 	# return accuracy_score(tag_test, pred) #对比分类预测结果和人工标注的正确结果，给出分类器准确度
 	return accuracy_score(tag_dev,pred)
+	
 
-# 使用所有词（单词）作为特征
-# posFeatures = pos_features(bag_of_words) #使用所有词作为特征
-# negFeatures = neg_features(bag_of_words)
 
-# 使用双词搭配作特征时的效果
-# posFeatures = pos_features(bigrams)
-# negFeatures = neg_features(bigrams)
-
-'''
-# 使用所有词（单词）加上双词搭配作特征的效果
-posFeatures = pos_features(bigram_words)
-negFeatures = neg_features(bigram_words)
-
-# 计算信息量丰富的词，并以此作为分类特征
-word_scores = create_word_scores()
-best_words = find_best_words(word_scores, 1500) #选择信息量最丰富的1500个的特征
-
-posFeatures = pos_features(best_word_features)
-negFeatures = neg_features(best_word_features)
-
-# 计算信息量丰富的词和双词搭配，并以此作为特征
-word_scores = create_word_bigram_scores()
-best_words = find_best_words(word_scores, 1500) #选择信息量最丰富的1500个的特征
-
-posFeatures = pos_features(best_word_features)
-negFeatures = neg_features(best_word_features)
-'''
 
 print('BernoulliNB`s accuracy is %f' %score(BernoulliNB()))
 print('MultinomiaNB`s accuracy is %f' %score(MultinomialNB()))
