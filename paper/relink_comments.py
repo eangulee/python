@@ -12,7 +12,8 @@ def save2csv(csvName,list):
 		writer.writerow(l)
 
 
-stocks = ['工商银行','建设银行','交通银行','农业银行','浦发银行','招商银行']
+# stocks = ['工商银行','建设银行','交通银行','农业银行','浦发银行','招商银行']
+stocks = ['工商银行','农业银行','浦发银行',]
 
 datas = []
 for stock in stocks:
