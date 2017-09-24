@@ -33,10 +33,20 @@ def dict2list(dic:dict):
 	lst = [(key, val) for key, val in zip(keys, vals)]
 	return lst
 
+def switch(list):
+	result = []
+	for l in list:
+		for w in l:
+			result.append(w)
+	return result
+
 # Python 文本挖掘：使用机器学习方法进行情感分析（一、特征提取和选择）
 # 把所有词作为特征
-def bag_of_words(words):
+def bag_of_words(words):	
 	return dict([(word, True) for word in words])
+
+def bag_of_word(word):
+	return dict([(word, True)])
 
 # 把双词搭配（bigrams）作为特征
 def bigram(words, score_fn = BigramAssocMeasures.chi_sq, n=1000):
@@ -56,30 +66,37 @@ def bigram_words(words, score_fn = BigramAssocMeasures.chi_sq, n=1000):
 	return bag_of_words(newwords + bigrams)  #所有词和（信息量大的）双词搭配一起作为特征
 
 # 计算整个语料里面每个词的信息量
-def create_word_scores():
-	posWords = pickle.load(open('D:/code/sentiment_test/pos_review.pkl','r'))
-	negWords = pickle.load(open('D:/code/sentiment_test/neg_review.pkl','r'))
+def create_word_scores(posWords,negWords):
+	# posWords = pickle.load(open('D:/code/sentiment_test/pos_review.pkl','r'))
+	# negWords = pickle.load(open('D:/code/sentiment_test/neg_review.pkl','r'))
 
-	posWords = list(itertools.chain(*posWords)) #把多维数组解链成一维数组
-	negWords = list(itertools.chain(*negWords)) #同理
+	# posWords = list(itertools.chain(*posWords)) #把多维数组解链成一维数组
+	# negWords = list(itertools.chain(*negWords)) #同理
+	posWords = switch(posWords)
+	negWords = switch(negWords)
 
 	word_fd = FreqDist() #可统计所有词的词频
 	cond_word_fd = ConditionalFreqDist() #可统计积极文本中的词频和消极文本中的词频
 	for word in posWords:
-		word_fd.inc(word)
-		cond_word_fd['pos'].inc(word)
+		# print(word)
+		word_fd[word] += 1
+		cond_word_fd['pos'][word] += 1
 	for word in negWords:
-		word_fd.inc(word)
-		cond_word_fd['neg'].inc(word)
+		word_fd[word] += 1
+		cond_word_fd['neg'][word] += 1
 
 	pos_word_count = cond_word_fd['pos'].N() #积极词的数量
 	neg_word_count = cond_word_fd['neg'].N() #消极词的数量
 	total_word_count = pos_word_count + neg_word_count
+	print("pos_word_count:"+str(pos_word_count))
+	print("neg_word_count:"+str(neg_word_count))
 
 	word_scores = {}
-	for k in word_fd.dict2list():
-		word = k[0]
-		freq = k[1]
+	# for k in word_fd.dict2list():
+		# word = k[0]
+		# freq = k[1]
+	for word in word_fd.keys():
+		freq = word_fd[word]
 		pos_score = BigramAssocMeasures.chi_sq(cond_word_fd['pos'][word], (freq, pos_word_count), total_word_count) #计算积极词的卡方统计量，这里也可以计算互信息等其它统计量
 		neg_score = BigramAssocMeasures.chi_sq(cond_word_fd['neg'][word], (freq, neg_word_count), total_word_count) #同理
 		word_scores[word] = pos_score + neg_score #一个词的信息量等于积极卡方统计量加上消极卡方统计量
@@ -87,12 +104,15 @@ def create_word_scores():
 	return word_scores #包括了每个词和这个词的信息量
 
 # 计算整个语料里面每个词和双词搭配的信息量
-def create_word_bigram_scores():
-	posdata = pickle.load(open('D:/code/sentiment_test/pos_review.pkl','r'))
-	negdata = pickle.load(open('D:/code/sentiment_test/neg_review.pkl','r'))
+def create_word_bigram_scores(posWords,negWords):
+	# posdata = pickle.load(open('D:/code/sentiment_test/pos_review.pkl','r'))
+	# negdata = pickle.load(open('D:/code/sentiment_test/neg_review.pkl','r'))
 	
-	posWords = list(itertools.chain(*posdata))
-	negWords = list(itertools.chain(*negdata))
+	# posWords = list(itertools.chain(*posdata))
+	# negWords = list(itertools.chain(*negdata))
+
+	posWords = switch(posWords)
+	negWords = switch(negWords)
 
 	bigram_finder = BigramCollocationFinder.from_words(posWords)
 	bigram_finder = BigramCollocationFinder.from_words(negWords)
@@ -105,20 +125,22 @@ def create_word_bigram_scores():
 	word_fd = FreqDist()
 	cond_word_fd = ConditionalFreqDist()
 	for word in pos:
-		word_fd.inc(word)
-		cond_word_fd['pos'].inc(word)
+		word_fd[word] += 1
+		cond_word_fd['pos'][word] += 1
 	for word in neg:
-		word_fd.inc(word)
-		cond_word_fd['neg'].inc(word)
+		word_fd[word] += 1
+		cond_word_fd['neg'][word] += 1
 
 	pos_word_count = cond_word_fd['pos'].N()
 	neg_word_count = cond_word_fd['neg'].N()
 	total_word_count = pos_word_count + neg_word_count
 
 	word_scores = {}
-	for k in word_fd.dict2list():
-		word = k[0]
-		freq = k[1]
+	# for k in word_fd.dict2list():
+	# 	word = k[0]
+	# 	freq = k[1]
+	for word in word_fd.keys():
+		freq = word_fd[word]
 		pos_score = BigramAssocMeasures.chi_sq(cond_word_fd['pos'][word], (freq, pos_word_count), total_word_count)
 		neg_score = BigramAssocMeasures.chi_sq(cond_word_fd['neg'][word], (freq, neg_word_count), total_word_count)
 		word_scores[word] = pos_score + neg_score
@@ -128,13 +150,16 @@ def create_word_bigram_scores():
 # 根据信息量进行倒序排序，选择排名靠前的信息量的词
 def find_best_words(word_scores, number):
 	#把词按信息量倒序排序。number是特征的维度，是可以不断调整直至最优的
-	best_vals = sorted(word_scores.dict2list(), key=lambda d:d[1], reverse=True)[:number]
-	best_words = set([w for w, s in best_vals])
+	best_vals = sorted(dict2list(word_scores), key=lambda d:d[1], reverse=True)[:number]
+	print(type(best_vals))
+	best_words = set([w for w,s in best_vals])
 	return best_words
 
 # 把选出的这些词作为特征（这就是选择了信息量丰富的特征）
+# def best_word_features(words,best_words):
+# 	return dict([(word, True) for word in words if word in best_words])
 def best_word_features(words,best_words):
-	return dict([(word, True) for word in words if word in best_words])
+	return [word for word in words if word in best_words]
 
 # test
 # word_scores_1 = create_word_scores()
@@ -161,7 +186,7 @@ def getwords(inputFile):
 	f = open(inputFile, 'r',encoding='utf-8')
 	words = []
 	for line in f:
-		ws = line.split()		
+		ws = line.split()
 		words.append([(w) for w in ws])
 	f.close()
 	return words
@@ -169,22 +194,61 @@ def getwords(inputFile):
 pos_review = getwords('datas/pos_feature.txt')
 neg_review = getwords('datas/neg_feature.txt')
 
-# 使积极文本的数量和消极文本的数量一样。
-shuffle(pos_review) #把积极文本的排列随机化
-shuffle(neg_review)
-poslen = len(pos_review)
-neglen = len(neg_review)
 
-print("pos length:"+str(poslen))
-print("neg length:"+str(neglen))
+word_scores_1 = create_word_scores(pos_review,neg_review)
+word_scores_2 = create_word_bigram_scores(pos_review,neg_review)
+print(len(word_scores_1))
+print(len(word_scores_2))
+# for w in word_scores_1:
+# 	print(w)
+best_words1 = find_best_words(word_scores_1,8000)
+best_words2 = find_best_words(word_scores_2,8000)
+print(type(best_words1))
+# for w in best_words1:
+# 	print(w)
 
+
+# 使用最好的特征值
+pos = best_word_features(switch(pos_review),best_words1)
+neg = best_word_features(switch(neg_review),best_words1)
+
+posFeatures = pos_features(pos,bag_of_word)
+negFeatures = neg_features(neg,bag_of_word)
+
+shuffle(posFeatures) #把积极文本的排列随机化
+shuffle(negFeatures)
+
+print("pos length:"+str(len(posFeatures)))
+print("neg length:"+str(len(negFeatures)))
+
+poslen = len(posFeatures)
+neglen = len(negFeatures)
 size = poslen
 if(size>neglen):
 	size = neglen
-pos = pos_review[:size]
-neg = neg_review[:size]
+posFeatures = posFeatures[:size]
+negFeatures = negFeatures[:size]
 
-# 使用所有词（单词）作为特征
+trainRate = 0.8
+trainIndex = int(size * trainRate) -1 
+devIndex  = int(size * (trainRate + 0.1)) - 1
+testIndex = size - 1 
+# 使积极文本的数量和消极文本的数量一样。
+# shuffle(pos_review) #把积极文本的排列随机化
+# shuffle(neg_review)
+# poslen = len(pos_review)
+# neglen = len(neg_review)
+
+# print("pos length:"+str(poslen))
+# print("neg length:"+str(neglen))
+
+# size = poslen
+# if(size>neglen):
+# 	size = neglen
+# pos = pos_review[:size]
+# neg = neg_review[:size]
+
+# # 使用所有词（单词）作为特征
 # posFeatures = pos_features(pos,bag_of_words)
 # negFeatures = neg_features(neg,bag_of_words)
 
@@ -194,8 +258,8 @@ neg = neg_review[:size]
 
 
 # 使用所有词（单词）加上双词搭配作特征的效果
-posFeatures = pos_features(pos,bigram_words)
-negFeatures = neg_features(neg,bigram_words)
+# posFeatures = pos_features(pos,bigram_words)
+# negFeatures = neg_features(neg,bigram_words)
 
 '''
 # 计算信息量丰富的词，并以此作为分类特征
@@ -218,11 +282,13 @@ negFeatures = neg_features(best_word_features)
 
 # 把特征化之后的数据数据分割为开发集和测试集
 # 这里把前124个数据作为测试集，中间50个数据作为开发测试集，最后剩下的大部分数据作为训练集。可以根据自己的需求修改
-train = posFeatures[:400]+negFeatures[:400]
-devtest = posFeatures[400:500]+negFeatures[400:500]
-testset = posFeatures[500:548]+negFeatures[500:548]
-for t in train:
-	print(t)
+
+
+train = posFeatures[:trainIndex]+negFeatures[:trainIndex]
+devtest = posFeatures[trainIndex:devIndex]+negFeatures[trainIndex:devIndex]
+testset = posFeatures[devIndex:testIndex]+negFeatures[devIndex:testIndex]
+# for t in train:
+# 	print(t)
 
 # Python 文本挖掘：使用机器学习方法进行情感分析（三、分类器及其准确度）
 # 分割人工标注的标签和数据
@@ -261,15 +327,27 @@ def score(classifier):
 	# return accuracy_score(tag_test, pred) #对比分类预测结果和人工标注的正确结果，给出分类器准确度
 	return accuracy_score(tag_dev,pred)
 	
-
-
-
 print('BernoulliNB`s accuracy is %f' %score(BernoulliNB()))
 print('MultinomiaNB`s accuracy is %f' %score(MultinomialNB()))
 print('LogisticRegression`s accuracy is %f' %score(LogisticRegression()))
 print('SVC`s accuracy is %f' %score(SVC()))
 print('LinearSVC`s accuracy is %f' %score(LinearSVC()))
 print('NuSVC`s accuracy is %f' %score(NuSVC()))
+
+# 训练
+BernoulliNB_classifier = SklearnClassifier(BernoulliNB())
+BernoulliNB_classifier.train(train)
+
+
+test_review = getwords('datas/中国银行_split.txt')
+p_file = open('datas/中国银行_socre.txt','w',encoding='utf-8') #把结果写入文档
+for tr in test_review:
+	testFeature = bag_of_words(tr)
+	pred = BernoulliNB_classifier.prob_classify_many(testFeature) #该方法是计算分类概率值的
+	content =" ".join(tr)
+	for i in pred:
+		p_file.write(content+","+str(i.prob('pos')) + ' ' + str(i.prob('neg')) + '\n')
+p_file.close()
 
 '''
 dimension = ['500','1000','1500','2000','2500','3000']
