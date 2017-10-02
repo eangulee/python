@@ -23,6 +23,8 @@ from sklearn.svm import SVC, LinearSVC, NuSVC
 from sklearn.naive_bayes import MultinomialNB, BernoulliNB
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score
+from sklearn.metrics import recall_score
+from sklearn.metrics import f1_score
 import pickle
 
 # 用于字典排序
@@ -125,24 +127,30 @@ def create_word_bigram_scores(posWords,negWords):
 	word_fd = FreqDist()
 	cond_word_fd = ConditionalFreqDist()
 	for word in pos:
+		# print(word)
 		word_fd[word] += 1
 		cond_word_fd['pos'][word] += 1
+	print('------------------------------------------------------------')
 	for word in neg:
+		# print(word)
 		word_fd[word] += 1
 		cond_word_fd['neg'][word] += 1
+
+	# for p in word_fd.keys():
+	# 	print(p+":"+str(word_fd[p]))
 
 	pos_word_count = cond_word_fd['pos'].N()
 	neg_word_count = cond_word_fd['neg'].N()
 	total_word_count = pos_word_count + neg_word_count
+	print("pos_word_count:"+str(pos_word_count))
+	print("neg_word_count:"+str(neg_word_count))
 
 	word_scores = {}
-	# for k in word_fd.dict2list():
-	# 	word = k[0]
-	# 	freq = k[1]
 	for word in word_fd.keys():
 		freq = word_fd[word]
 		pos_score = BigramAssocMeasures.chi_sq(cond_word_fd['pos'][word], (freq, pos_word_count), total_word_count)
 		neg_score = BigramAssocMeasures.chi_sq(cond_word_fd['neg'][word], (freq, neg_word_count), total_word_count)
+		# print(word+":"+str(pos_score)+","+str(neg_score))
 		word_scores[word] = pos_score + neg_score
 
 	return word_scores
@@ -152,6 +160,8 @@ def find_best_words(word_scores, number):
 	#把词按信息量倒序排序。number是特征的维度，是可以不断调整直至最优的
 	best_vals = sorted(dict2list(word_scores), key=lambda d:d[1], reverse=True)[:number]
 	print(type(best_vals))
+	# for b,s in best_vals:
+	# 	print(b+":"+str(s))
 	best_words = set([w for w,s in best_vals])
 	return best_words
 
@@ -159,7 +169,16 @@ def find_best_words(word_scores, number):
 # def best_word_features(words,best_words):
 # 	return dict([(word, True) for word in words if word in best_words])
 def best_word_features(words,best_words):
-	return [word for word in words if word in best_words]
+	# return [word for word in words if word in best_words]	
+	ws = []
+	for word in words:
+		if(word in best_words):
+			ws.append(word)
+		for bws in best_words:
+			if(word in bws):
+				ws.append(word)
+	return ws
+
 
 # test
 # word_scores_1 = create_word_scores()
@@ -191,9 +210,9 @@ def getwords(inputFile):
 	f.close()
 	return words
 
+#读入消极词库和积极词库
 pos_review = getwords('datas/pos_feature.txt')
 neg_review = getwords('datas/neg_feature.txt')
-
 
 word_scores_1 = create_word_scores(pos_review,neg_review)
 word_scores_2 = create_word_bigram_scores(pos_review,neg_review)
@@ -203,17 +222,24 @@ print(len(word_scores_2))
 # 	print(w)
 best_words1 = find_best_words(word_scores_1,8000)
 best_words2 = find_best_words(word_scores_2,8000)
-print(type(best_words1))
+# print(type(best_words1))
 # for w in best_words1:
 # 	print(w)
 
 
 # 使用最好的特征值
-pos = best_word_features(switch(pos_review),best_words1)
-neg = best_word_features(switch(neg_review),best_words1)
+pos = best_word_features(switch(pos_review),best_words2)
+neg = best_word_features(switch(neg_review),best_words2)
 
-posFeatures = pos_features(pos,bag_of_word)
+posFeatures = pos_features(pos,bag_of_word)	
 negFeatures = neg_features(neg,bag_of_word)
+
+# print('---------------------------------------------------------pos')
+# for p in posFeatures:
+# 	print(p)
+# print('---------------------------------------------------------neg')
+# for p in negFeatures:
+# 	print(p)
 
 shuffle(posFeatures) #把积极文本的排列随机化
 shuffle(negFeatures)
@@ -229,10 +255,10 @@ if(size>neglen):
 posFeatures = posFeatures[:size]
 negFeatures = negFeatures[:size]
 
-trainRate = 0.8
+trainRate = 0.8 #训练集
 trainIndex = int(size * trainRate) -1 
-devIndex  = int(size * (trainRate + 0.1)) - 1
-testIndex = size - 1 
+devIndex  = int(size * (trainRate + 0.1)) - 1 #训练测试集
+testIndex = size - 1 # 测试集
 # 使积极文本的数量和消极文本的数量一样。
 # shuffle(pos_review) #把积极文本的排列随机化
 # shuffle(neg_review)
@@ -292,6 +318,7 @@ testset = posFeatures[devIndex:testIndex]+negFeatures[devIndex:testIndex]
 
 # Python 文本挖掘：使用机器学习方法进行情感分析（三、分类器及其准确度）
 # 分割人工标注的标签和数据
+tra,tag_tra = zip(*train)
 dev, tag_dev = zip(*devtest) #把开发测试集（已经经过特征化和赋予标签了）分为数据和标签
 test, tag_test = zip(*testset) #把测试集（已经经过特征化和赋予标签了）分为数据和标签
 # for d in devtest:
@@ -324,30 +351,62 @@ def score(classifier):
 
 	# pred = classifier.batch_classify(testSet) #对开发测试集的数据进行分类，给出预测的标签
 	pred = classifier.classify_many(dev)
-	# return accuracy_score(tag_test, pred) #对比分类预测结果和人工标注的正确结果，给出分类器准确度
-	return accuracy_score(tag_dev,pred)
 	
-print('BernoulliNB`s accuracy is %f' %score(BernoulliNB()))
-print('MultinomiaNB`s accuracy is %f' %score(MultinomialNB()))
-print('LogisticRegression`s accuracy is %f' %score(LogisticRegression()))
-print('SVC`s accuracy is %f' %score(SVC()))
-print('LinearSVC`s accuracy is %f' %score(LinearSVC()))
-print('NuSVC`s accuracy is %f' %score(NuSVC()))
+	TP = 0
+	FN = 0
+	FP = 0
+	TN = 0	
+
+	i = 0
+	for t in tag_dev:
+		# print(t)
+		if(t == 'pos'):
+			if(pred[i] == 'pos'):
+				TP += 1
+			else:
+				FN += 1
+		else:
+			if(pred[i] == 'pos'):
+				FP += 1
+			else:
+				TN += 1
+		i += 1
+
+	print("TP:%f,FN:%f,FP:%f,TN:%f"%(TP,FN,FP,TN))
+	precision = TP/(TP+FP)
+	recall = TP/(TP+FN)
+	f1 = 2*(precision*recall)/(precision+recall)
+	print("acc:%f"%(precision))
+	print("recall:%f"%(recall))
+	print("f1:%f"%(f1))
+
+	# return accuracy_score(tag_test, pred) #对比分类预测结果和人工标注的正确结果，给出分类器准确度
+	return accuracy_score(tag_dev,pred),recall_score(tag_dev,pred,average='micro'),f1_score(tag_dev,pred,average='micro')
+
+print('BernoulliNB`s accuracy is %f,recall is %f,f1_score is %f' %score(BernoulliNB()))
+# print('MultinomiaNB`s accuracy is %f,recall is %f,f1_score is %f' %score(MultinomialNB()))
+print('LogisticRegression`s accuracy is %f,recall is %f,f1_score is %f' %score(LogisticRegression()))
+print('SVC`s accuracy is %f,recall is %f,f1_score is %f' %score(SVC()))
+print('LinearSVC`s accuracy is %f,recall is %f,f1_score is %f' %score(LinearSVC()))
+print('NuSVC`s accuracy is %f,recall is %f,f1_score is %f' %score(NuSVC()))
+print("\n")
 
 # 训练
 BernoulliNB_classifier = SklearnClassifier(BernoulliNB())
 BernoulliNB_classifier.train(train)
 
-
-test_review = getwords('datas/中国银行_split.txt')
-p_file = open('datas/中国银行_socre.txt','w',encoding='utf-8') #把结果写入文档
-for tr in test_review:
-	testFeature = bag_of_words(tr)
-	pred = BernoulliNB_classifier.prob_classify_many(testFeature) #该方法是计算分类概率值的
-	content =" ".join(tr)
-	for i in pred:
-		p_file.write(content+","+str(i.prob('pos')) + ' ' + str(i.prob('neg')) + '\n')
-p_file.close()
+banks = ["中国银行","工商银行","交通银行","农业银行","浦发银行","招商银行"]
+for b in banks:
+	path = 'datas/'+b+'_split.txt'
+	test_review = getwords(path)
+	p_file = open('datas/'+ b +'_socre.txt','w',encoding='utf-8') #把结果写入文档
+	for tr in test_review:
+		testFeature = bag_of_words(tr)
+		pred = BernoulliNB_classifier.prob_classify_many(testFeature) #该方法是计算分类概率值的
+		content =" ".join(tr)
+		for i in pred:
+			p_file.write(content+","+str(i.prob('pos')) + ' ' + str(i.prob('neg')) + '\n')
+	p_file.close()
 
 '''
 dimension = ['500','1000','1500','2000','2500','3000']

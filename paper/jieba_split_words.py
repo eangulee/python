@@ -16,13 +16,6 @@ for eachWord in fstop:
 fstop.close()
 
 def splitSentence(inputFile, outputFile):
-	# #把停用词做成字典
-	# stopwords = {}
-	# fstop = open('stop_words.txt', 'r',encoding='utf-8')
-	# for eachWord in fstop:
-	# 	stopwords[eachWord.strip()] = eachWord.strip()
-	# fstop.close()
-
 	fin = open(inputFile, 'r',encoding='utf-8')									#以读的方式打开文件  
 	fout = open(outputFile, 'w',encoding='utf-8')								#以写得方式打开文件  
 	# jieba.enable_parallel(4)									#并行分词
@@ -61,8 +54,6 @@ def getSentence(inputFile):
   
 
 
-# splitSentence('ss.txt', 'tt.txt')
-
 xlsfile = r'sz50.xlsx' # 上证50股票名单
 data = xlrd.open_workbook(xlsfile)
 table = data.sheets()[0]          #通过索引顺序获取
@@ -77,8 +68,8 @@ words = ''
 for stock in stocks:
 	print(stock)
 	try:
-		# splitSentence('sz50/'+stock+".txt",'sz50/'+stock+"_split.txt")
-		words += getSentence('sz50/'+stock+".txt")+"\n"
+		splitSentence('sz50/'+stock+".txt",'sz50/'+stock+"_split.txt")
+		# words += getSentence('sz50/'+stock+".txt")+"\n"
 	except:
 		continue
 
