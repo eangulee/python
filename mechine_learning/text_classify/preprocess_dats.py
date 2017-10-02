@@ -56,5 +56,8 @@ def getsentence(inputFile, outputFile):
 	return sentences
 
 
-splitwords('datas/pos.txt','datas/pos_feature.txt')
-splitwords('datas/neg.txt','datas/neg_feature.txt')
+# splitwords('datas/pos.txt','datas/pos_feature.txt')
+# splitwords('datas/neg.txt','datas/neg_feature.txt')
+banks = ["中国银行","工商银行","交通银行","农业银行","浦发银行","招商银行","建设银行"]
+for bank in banks:
+	splitwords("datas/"+bank+".txt","datas/"+bank+"_split.txt")

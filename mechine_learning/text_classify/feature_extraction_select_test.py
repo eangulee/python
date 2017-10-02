@@ -395,7 +395,7 @@ print("\n")
 BernoulliNB_classifier = SklearnClassifier(BernoulliNB())
 BernoulliNB_classifier.train(train)
 
-banks = ["中国银行","工商银行","交通银行","农业银行","浦发银行","招商银行"]
+banks = ["中国银行","工商银行","交通银行","农业银行","浦发银行","招商银行","建设银行"]
 for b in banks:
 	path = 'datas/'+b+'_split.txt'
 	test_review = getwords(path)
@@ -405,7 +405,11 @@ for b in banks:
 		pred = BernoulliNB_classifier.prob_classify_many(testFeature) #该方法是计算分类概率值的
 		content =" ".join(tr)
 		for i in pred:
-			p_file.write(content+","+str(i.prob('pos')) + ' ' + str(i.prob('neg')) + '\n')
+			# p_file.write(content+","+str(i.prob('pos')) + ' ' + str(i.prob('neg')) + '\n')
+			if(i.prob('pos') > i.prob('neg')):
+				p_file.write("1\n")
+			else:
+				p_file.write("0\n")
 	p_file.close()
 
 '''
