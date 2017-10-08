@@ -22,28 +22,33 @@ def dict2list(dic:dict):
     lst = [(key, val) for key, val in zip(keys, vals)]
     return lst
 
-# xlsfile = r'D:\python\paper\sz50.xlsx' # 上证50股票名单
-# data = xlrd.open_workbook(xlsfile)
-# table = data.sheets()[0]          #通过索引顺序获取
-# # cols = table.col_values(2)
-# nrows = table.nrows
-# stocks = []
-# stocks2 = {}
-# for i in range(nrows)[1:]:
-# 	stock = str(table.cell(i,1).value)
-# 	stock = stock.replace('.0','')
-# 	if(len(stock) < 6):# 股票代码为6位
-# 		diff = 6 - len(stock)
-# 		for j in range(diff):
-# 			stock = '0' + stock
-# 	# print(stock)
-# 	stocks.append(stock)
-# 	stocks2.setdefault(stock,table.cell(i,0).value)
+tasks = {}
+xlsfile = r'D:\python\paper\sz50.xlsx' # 上证50股票名单
+data = xlrd.open_workbook(xlsfile)
+table = data.sheets()[0]          #通过索引顺序获取
+# cols = table.col_values(2)
+nrows = table.nrows
+stocks = []
+stocks2 = {}
+for i in range(nrows)[1:]:
+	if(table.cell(i,0).value not in tasks):
+		# print(table.cell(i,0).value)
+		continue
+	print(table.cell(i,0).value)
+	stock = str(table.cell(i,1).value)
+	stock = stock.replace('.0','')
+	if(len(stock) < 6):# 股票代码为6位
+		diff = 6 - len(stock)
+		for j in range(diff):
+			stock = '0' + stock
+	print(stock)
+	stocks.append(stock)
+	stocks2.setdefault(stock,table.cell(i,0).value)
 # for k in stocks2.keys():
 # 	print(k+":"+stocks2[k])
-stocks = ['601939','601288','601398','601328','600000','600036']
-# stocks = ['601988']
-stocks2 ={'601939':'建设银行','601288':'农业银行','601398':'工商银行','601328':'交通银行','600000':'浦发银行','600036':'招商银行'}
+# stocks = ['601939','601288','601398','601328','600000','600036']
+# # stocks = ['601988']
+# stocks2 ={'601939':'建设银行','601288':'农业银行','601398':'工商银行','601328':'交通银行','600000':'浦发银行','600036':'招商银行'}
 # stocks2 = {'601988':'中国银行'}
 commentCounts = {}
 i = 1

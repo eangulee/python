@@ -26,7 +26,7 @@ def splitSentence(inputFile, outputFile):
 		outStr = ''  
 		for word in wordList:
 			if word not in stopwords:  
-				outStr += word  
+				outStr += word
 				outStr += ' '  
 		fout.write(outStr.strip() + '\n')       #将分词好的结果写入到输出文件
 	fin.close()  
@@ -52,7 +52,18 @@ def getSentence(inputFile):
 
 	return sentence
   
-
+def getComments(inputFile, outputFile):
+	fin = open(inputFile, 'r',encoding='utf-8')									#以读的方式打开文件  
+	fout = open(outputFile, 'w',encoding='utf-8')								#以写得方式打开文件  
+	i=0
+	for eachLine in fin:		
+		i += 1
+		if(i == 1):
+			continue
+		line = eachLine.strip().split(',')
+		fout.write(line[0] + '\n')       #将分词好的结果写入到输出文件
+	fin.close()  
+	fout.close()
 
 xlsfile = r'sz50.xlsx' # 上证50股票名单
 data = xlrd.open_workbook(xlsfile)
@@ -64,18 +75,19 @@ for i in range(nrows)[1:]:
 	stock = str(table.cell(i,0).value)
 	stocks.append(stock)
 
-words = ''
+# words = ''
 for stock in stocks:
 	print(stock)
 	try:
+		# getComments('sz50/'+stock+".csv",'sz50/'+stock+".txt")
 		splitSentence('sz50/'+stock+".txt",'sz50/'+stock+"_split.txt")
 		# words += getSentence('sz50/'+stock+".txt")+"\n"
 	except:
 		continue
 
-tags = jieba.analyse.extract_tags(words,topK=100)
-for t in tags:
-	print(t)
+# tags = jieba.analyse.extract_tags(words,topK=100)
+# for t in tags:
+# 	print(t)
 
 # print(words)
 # print('-------------------------------------------------------------------------------------------')

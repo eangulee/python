@@ -4,6 +4,20 @@
 import datetime
 import xlrd
 import math
+import csv
+
+def getcsv(csvname):
+	lines = []
+	open_file = open(csvname, 'r',encoding='utf-8')
+	csv_reader = csv.reader(open_file)
+	for row in csv_reader:
+		lines.append(row)
+	return lines
+
+def gettxt(filepath):
+	f = open(filepath,"r",encoding='utf-8')
+	lines = f.readlines() #读取全部内容
+	return lines
 
 #上证指数汇总
 sz_trades = {}
@@ -11,52 +25,54 @@ xlsfile = r'datas/上指数汇总.xlsx'
 data = xlrd.open_workbook(xlsfile)
 table = data.sheets()[1]          #通过索引顺序获取
 nrows = table.nrows
-for i in range(nrows)[1:]:
+for i in range(nrows)[1:nrows-2]:
 	d = xlrd.xldate.xldate_as_datetime(table.cell(i,0).value,0)	
 	dstr = d.strftime('%Y-%m-%d')
 	# print(dstr+","+str(table.cell(i,6).value))
-	sz_trades.setdefault(dstr,table.cell(i,6).value)
+	#[今日收盘价,上个交易日收盘价,涨跌幅]
+	sz_trades.setdefault(dstr,[table.cell(i+1,4).value,table.cell(i,4).value,table.cell(i+1,6).value])
 
 #上证银行指数
-sz_bank_trades = {}
-xlsfile = r'datas/上证银行指数.xlsx' 
+# sz_bank_trades = {}
+# xlsfile = r'datas/上证银行指数.xlsx' 
+# data = xlrd.open_workbook(xlsfile)
+# table = data.sheets()[0]          #通过索引顺序获取
+# nrows = table.nrows
+# for i in range(nrows)[1:nrows-2]:
+# 	d = xlrd.xldate.xldate_as_datetime(table.cell(i,0).value,0)	
+# 	dstr = d.strftime('%Y-%m-%d')
+# 	sz_bank_trades.setdefault(dstr,table.cell(i,2).value)
+
+# banks = ["中国银行","工商银行","交通银行","农业银行","浦发银行","招商银行","建设银行"]
+xlsfile = r'D:\python\paper\sz50.xlsx' # 上证50股票名单
 data = xlrd.open_workbook(xlsfile)
 table = data.sheets()[0]          #通过索引顺序获取
+# cols = table.col_values(2)
 nrows = table.nrows
+banks = []
 for i in range(nrows)[1:]:
-	d = xlrd.xldate.xldate_as_datetime(table.cell(i,0).value,0)	
-	dstr = d.strftime('%Y-%m-%d')
-	sz_bank_trades.setdefault(dstr,table.cell(i,2).value)
-
-banks = ["中国银行","工商银行","交通银行","农业银行","浦发银行","招商银行","建设银行"]
+	banks.append(table.cell(i,0).value)
 
 stock_trades = {}
 for bank in banks:
-	xlsfile = r'datas/'+bank+'股票.xlsx' 
-	data = xlrd.open_workbook(xlsfile)
-	table = data.sheets()[0]          #通过索引顺序获取
-	# cols = table.col_values(2)
-	nrows = table.nrows
+	csvpath = r'datas/trades/'+bank+'.csv' 
+	lines = getcsv(csvpath)
 	trades = {}	
-	for i in range(nrows)[1:]:
-		# stock = str(table.cell(i,1).value)
-		d = xlrd.xldate.xldate_as_datetime(table.cell(i,0).value,0)	
-		dstr = d.strftime('%Y-%m-%d')
-		trades.setdefault(dstr,table.cell(i,1).value)
+	for line in lines[1:]:
+		dstr = line[0]
+		trades.setdefault(dstr,line)
 	stock_trades.setdefault(bank,trades)
 
 stocks = {}
 for bank in banks:
-	xlsfile = r'datas/'+bank+'.xlsx' 
-	data = xlrd.open_workbook(xlsfile)
-	table = data.sheets()[0]          #通过索引顺序获取
-	# cols = table.col_values(2)
-	nrows = table.nrows
+	csvpath = r'datas/'+bank+'.csv' 
+	ls = getcsv(csvpath)
+	scores = gettxt(r'datas/'+bank+'_socre.txt')
 	datas = {}	
-	for i in range(nrows)[1:]:
-		# stock = str(table.cell(i,1).value)
-		d = xlrd.xldate.xldate_as_datetime(table.cell(i,6).value,0)	
-		dstr = d.strftime('%Y-%m-%d')
+	for i in range(len(ls))[1:]:
+		l = ls[i]
+		# print(l)
+		dstr = l[5].split()[0]
 		# print(dstr)
 
 		if(dstr not in datas.keys()):
@@ -64,11 +80,12 @@ for bank in banks:
 		lines = datas[dstr]
 
 		line = []
-		line.append(table.cell(i,1).value)#涨跌
-		line.append(table.cell(i,2).value)#阅读
-		line.append(table.cell(i,3).value)#评论
-		line.append(table.cell(i,4).value)#字数
-		line.append(table.cell(i,5).value + 1)#影响力
+		# print(scores[i-1])
+		line.append(scores[i-1])#涨跌
+		line.append(l[1])#阅读
+		line.append(l[2])#评论
+		line.append(l[3])#字数
+		line.append(float(l[4]) + 1)#影响力
 
 		lines.append(line)
 
@@ -80,6 +97,7 @@ for bank in stocks.keys():
 	datas = stocks[bank]
 	datas2 = {}
 
+	i = 0
 	trades = stock_trades[bank] # 交易数据
 	for dstr in datas.keys():
 		data2 = []
@@ -95,17 +113,35 @@ for bank in stocks.keys():
 		comment = 0 #评论数
 		words_count = 0 #字数
 		for line in lines:
-			reads += line[1]
-			comment += line[2]
-			words_count += line[3]
+			reads += int(line[1])
+			comment += int(line[2])
+			words_count += int(line[3])
 
 		for line in lines:
-			if(line[0] > 0):
+			if(int(line[0]) > 0):
 				up += 1
-				Lt_up += (line[1])/reads * line[4]
+				Lt_up += (int(line[1]))/reads * line[4]
 			else:
 				down += 1
-				Lt_down += (line[1])/reads * line[4]
+				Lt_down += (int(line[1]))/reads * line[4]
+
+		VOL = 0 #日内波动率
+		if(dstr in trades.keys()):
+			highest = float(trades[dstr][2])
+			lowest = float(trades[dstr][3])
+			VOL = math.pow((math.log(highest,math.e) - math.log(lowest,math.e)),2)/(4 * math.log(2,math.e))
+		data2.append(VOL)
+
+		#日收益率
+		if(i > 0):
+			if(dstr in sz_trades.keys()):
+				endprice = sz_trades[dstr][0]
+				lastendprice = sz_trades[dstr][1]
+				data2.append(math.log((endprice / lastendprice),math.e))
+			else:
+				data2.append(0)
+		else:
+			data2.append(0)
 
 		SSI = up - down #简单情感指数
 		data2.append(SSI)
@@ -117,9 +153,10 @@ for bank in stocks.keys():
 		data2.append(DIS)
 
 		IIAt = math.log((1+Lt_up)/(1+Lt_down),math.e) #影响力指数
-		data2.append(DIS)
+		data2.append(IIAt)
 
-		data2.append(comment/len(lines)) #平均每篇的评论数
+		# data2.append(comment/len(lines)) #平均每篇的评论数
+		data2.append(comment) #总评论数
 
 		data2.append(words_count/len(lines)) #平均每篇的字数
 
@@ -127,10 +164,10 @@ for bank in stocks.keys():
 
 		trade = 0 #实际涨跌
 		if(dstr in trades.keys()):
-			trade = trades[dstr]
-		if(trade > 0): 
+			trade = trades[dstr][6]
+		if(float(trade) > 0): 
 			data2.append(1) #涨
-		elif(trade < 0):
+		elif(float(trade) < 0):
 			data2.append(0) #跌
 		else:
 			data2.append(2) #不涨不跌
@@ -138,34 +175,42 @@ for bank in stocks.keys():
 		data2.append(trade)#实际涨跌
 
 		if(dstr in sz_trades.keys()):
-			data2.append(sz_trades[dstr])#上证指数
+			data2.append(sz_trades[dstr][2])#上证指数
 		else:
 			data2.append(0)
 
-		if(dstr in sz_bank_trades.keys()):
-			data2.append(sz_bank_trades[dstr])#上证银行指数
-		else:
-			data2.append(0)
+		# if(dstr in sz_bank_trades.keys()):
+		# 	data2.append(sz_bank_trades[dstr])#上证银行指数
+		# else:
+		# 	data2.append(0)
 
 		datas2.setdefault(dstr,data2)
+		i += 1
 
 	stocks2.setdefault(bank,datas2)
 
 def exists_date(dstr):
+	i = 0
 	for bank in stocks2.keys():
 		if(dstr not in stocks2[bank].keys()):
-			return False
-	return True
+			i += 1
+	if i > 5:
+		return False
+	else:
+		return True
 
 dates = {}
+i = 0
+print("日期,日内波动率,日收益率,简单情感指数,看涨,意见分散指数,影响力指数,总评论数,平均每篇的字数,发帖量,实际涨跌,涨跌幅,上证指数")	
 for bank in stocks2.keys():
-	print(bank+"---------------------------------------------------------------------")
-	print("日期,简单情感指数,看涨,意见分散指数,影响力指数,平均每篇的评论数,平均每篇的字数,发帖量,实际涨跌,涨跌幅,上证指数,上证银行指数")
+	# print(bank+"---------------------------------------------------------------------")
 	datas = stocks2[bank]
 	for dstr in datas.keys():
-		# if(not exists_date(dstr)):
-		# 	continue
+		if(not exists_date(dstr)):
+			continue
 		strs = ''
 		for d in datas[dstr]:
 			strs+=","+str(d)
 		print(dstr+strs)
+		i+=1
+print(i)

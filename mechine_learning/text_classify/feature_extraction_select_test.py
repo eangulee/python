@@ -26,6 +26,7 @@ from sklearn.metrics import accuracy_score
 from sklearn.metrics import recall_score
 from sklearn.metrics import f1_score
 import pickle
+import xlrd
 
 # 用于字典排序
 def dict2list(dic:dict):
@@ -120,6 +121,9 @@ def create_word_bigram_scores(posWords,negWords):
 	bigram_finder = BigramCollocationFinder.from_words(negWords)
 	posBigrams = bigram_finder.nbest(BigramAssocMeasures.chi_sq, 5000)
 	negBigrams = bigram_finder.nbest(BigramAssocMeasures.chi_sq, 5000)
+	# posBigrams = bigram_finder.nbest(BigramAssocMeasures.pmi, 5000)
+	# negBigrams = bigram_finder.nbest(BigramAssocMeasures.pmi, 5000)
+
 
 	pos = posWords + posBigrams #词和双词搭配
 	neg = negWords + negBigrams
@@ -150,8 +154,11 @@ def create_word_bigram_scores(posWords,negWords):
 		freq = word_fd[word]
 		pos_score = BigramAssocMeasures.chi_sq(cond_word_fd['pos'][word], (freq, pos_word_count), total_word_count)
 		neg_score = BigramAssocMeasures.chi_sq(cond_word_fd['neg'][word], (freq, neg_word_count), total_word_count)
+		# pos_score = BigramAssocMeasures.pmi(cond_word_fd['pos'][word], (freq, pos_word_count), total_word_count)
+		# neg_score = BigramAssocMeasures.pmi(cond_word_fd['neg'][word], (freq, neg_word_count), total_word_count)		
 		# print(word+":"+str(pos_score)+","+str(neg_score))
 		word_scores[word] = pos_score + neg_score
+		# word_scores[word] = freq
 
 	return word_scores
 
@@ -218,14 +225,21 @@ word_scores_1 = create_word_scores(pos_review,neg_review)
 word_scores_2 = create_word_bigram_scores(pos_review,neg_review)
 print(len(word_scores_1))
 print(len(word_scores_2))
-# for w in word_scores_1:
-# 	print(w)
+# i = 0
+# for w in word_scores_2.keys():
+# 	print(w+":"+str(word_scores_2[w]))
+# 	i+=1
+# 	if(i>100):
+# 		break
 best_words1 = find_best_words(word_scores_1,8000)
 best_words2 = find_best_words(word_scores_2,8000)
 # print(type(best_words1))
-# for w in best_words1:
-# 	print(w)
-
+i = 0
+for w in best_words2:
+	print(w)
+	i+=1
+	if(i>100):
+		break
 
 # 使用最好的特征值
 pos = best_word_features(switch(pos_review),best_words2)
@@ -395,8 +409,17 @@ print("\n")
 BernoulliNB_classifier = SklearnClassifier(BernoulliNB())
 BernoulliNB_classifier.train(train)
 
-banks = ["中国银行","工商银行","交通银行","农业银行","浦发银行","招商银行","建设银行"]
-for b in banks:
+xlsfile = r'datas/sz50.xlsx' # 上证50股票名单
+data = xlrd.open_workbook(xlsfile)
+table = data.sheets()[0]          #通过索引顺序获取
+# cols = table.col_values(2)
+nrows = table.nrows
+stocks = []
+for i in range(nrows)[1:]:
+	stocks.append(table.cell(i,0).value)
+
+# banks = ["中国银行","工商银行","交通银行","农业银行","浦发银行","招商银行","建设银行"]
+for b in stocks:
 	path = 'datas/'+b+'_split.txt'
 	test_review = getwords(path)
 	p_file = open('datas/'+ b +'_socre.txt','w',encoding='utf-8') #把结果写入文档
