@@ -218,13 +218,13 @@ def getwords(inputFile):
 	return words
 
 #读入消极词库和积极词库
-pos_review = getwords('datas/pos_feature.txt')
-neg_review = getwords('datas/neg_feature.txt')
+pos_review = getwords('datas2/pos_feature.txt')
+neg_review = getwords('datas2/neg_feature.txt')
 
 word_scores_1 = create_word_scores(pos_review,neg_review)
 word_scores_2 = create_word_bigram_scores(pos_review,neg_review)
 print(len(word_scores_1))
-print(len(word_scores_2))
+print('word_scores_2:'+str(len(word_scores_2)))
 # i = 0
 # for w in word_scores_2.keys():
 # 	print(w+":"+str(word_scores_2[w]))
@@ -232,14 +232,14 @@ print(len(word_scores_2))
 # 	if(i>100):
 # 		break
 best_words1 = find_best_words(word_scores_1,8000)
-best_words2 = find_best_words(word_scores_2,8000)
-# print(type(best_words1))
-i = 0
-for w in best_words2:
-	print(w)
-	i+=1
-	if(i>100):
-		break
+best_words2 = find_best_words(word_scores_2,int(len(word_scores_2) * 0.8))
+print(len(best_words2))
+# i = 0
+# for w in best_words2:
+# 	print(w)
+# 	i+=1
+# 	if(i>100):
+# 		break
 
 # 使用最好的特征值
 pos = best_word_features(switch(pos_review),best_words2)
@@ -397,14 +397,24 @@ def score(classifier):
 	# return accuracy_score(tag_test, pred) #对比分类预测结果和人工标注的正确结果，给出分类器准确度
 	return accuracy_score(tag_dev,pred),recall_score(tag_dev,pred,average='micro'),f1_score(tag_dev,pred,average='micro')
 
-print('BernoulliNB`s accuracy is %f,recall is %f,f1_score is %f' %score(BernoulliNB()))
-# print('MultinomiaNB`s accuracy is %f,recall is %f,f1_score is %f' %score(MultinomialNB()))
-print('LogisticRegression`s accuracy is %f,recall is %f,f1_score is %f' %score(LogisticRegression()))
-print('SVC`s accuracy is %f,recall is %f,f1_score is %f' %score(SVC()))
-print('LinearSVC`s accuracy is %f,recall is %f,f1_score is %f' %score(LinearSVC()))
-print('NuSVC`s accuracy is %f,recall is %f,f1_score is %f' %score(NuSVC()))
+# print('BernoulliNB`s accuracy is %f,recall is %f,f1_score is %f' %score(BernoulliNB()))
+# # print('MultinomiaNB`s accuracy is %f,recall is %f,f1_score is %f' %score(MultinomialNB()))
+# print('LogisticRegression`s accuracy is %f,recall is %f,f1_score is %f' %score(LogisticRegression()))
+# print('SVC`s accuracy is %f,recall is %f,f1_score is %f' %score(SVC()))
+# print('LinearSVC`s accuracy is %f,recall is %f,f1_score is %f' %score(LinearSVC()))
+# print('NuSVC`s accuracy is %f,recall is %f,f1_score is %f' %score(NuSVC()))
+print('BernoulliNB:')
+score(BernoulliNB())
+print('LogisticRegression:')
+score(LogisticRegression())
+print('SVC:')
+score(SVC())
+print('LinearSVC:')
+score(LinearSVC())
+print('NuSVC')
+score(NuSVC())
 print("\n")
-
+'''
 # 训练
 BernoulliNB_classifier = SklearnClassifier(BernoulliNB())
 BernoulliNB_classifier.train(train)
@@ -434,7 +444,7 @@ for b in stocks:
 			else:
 				p_file.write("0\n")
 	p_file.close()
-
+'''
 '''
 dimension = ['500','1000','1500','2000','2500','3000']
 
