@@ -5,6 +5,7 @@ import datetime
 import xlrd
 import math
 import csv
+import os
 
 def getcsv(csvname):
 	lines = []
@@ -19,18 +20,38 @@ def gettxt(filepath):
 	lines = f.readlines() #读取全部内容
 	return lines
 
+def save2csv(csvName,list):
+	path = './sz50/' + csvName + '.csv'
+	if os.path.exists(path):
+		os.remove(path)
+	print(path)
+	csvFile = open(path, 'w',encoding='utf-8',newline='')
+	writer = csv.writer(csvFile)
+	# writer.writerow(('标题','阅读','评论','字数','影响力','时间'))
+	for l in list:
+		writer.writerow(l)
+
+def save2txt(fileName,list):
+	path = './sz50/' + fileName + '.csv'
+	if os.path.exists(path):
+		os.remove(path)
+	print(path)
+	ofile = open(path, 'w',encoding='utf-8')
+	for l in list:
+		ofile.write(l+"\n")
+
 #上证指数汇总
 sz_trades = {}
 xlsfile = r'datas/上指数汇总.xlsx' 
 data = xlrd.open_workbook(xlsfile)
 table = data.sheets()[1]          #通过索引顺序获取
 nrows = table.nrows
-for i in range(nrows)[1:nrows-2]:
+for i in range(nrows)[2:nrows-1]:
 	d = xlrd.xldate.xldate_as_datetime(table.cell(i,0).value,0)	
 	dstr = d.strftime('%Y-%m-%d')
 	# print(dstr+","+str(table.cell(i,6).value))
 	#[今日收盘价,上个交易日收盘价,涨跌幅]
-	sz_trades.setdefault(dstr,[table.cell(i+1,4).value,table.cell(i,4).value,table.cell(i+1,6).value])
+	sz_trades.setdefault(dstr,[table.cell(i,4).value,table.cell(i-1,4).value,table.cell(i,6).value])
 
 #上证银行指数
 # sz_bank_trades = {}
@@ -44,7 +65,7 @@ for i in range(nrows)[1:nrows-2]:
 # 	sz_bank_trades.setdefault(dstr,table.cell(i,2).value)
 
 # banks = ["中国银行","工商银行","交通银行","农业银行","浦发银行","招商银行","建设银行"]
-xlsfile = r'D:\python\paper\sz50.xlsx' # 上证50股票名单
+xlsfile = r'sz50.xlsx' # 上证50股票名单
 data = xlrd.open_workbook(xlsfile)
 table = data.sheets()[0]          #通过索引顺序获取
 # cols = table.col_values(2)
@@ -58,9 +79,12 @@ for bank in banks:
 	csvpath = r'datas/trades/'+bank+'.csv' 
 	lines = getcsv(csvpath)
 	trades = {}	
-	for line in lines[1:]:
+	i = 1
+	for line in lines[2:len(lines)-1]:
 		dstr = line[0]
+		line.append(lines[i][4])
 		trades.setdefault(dstr,line)
+		i+=1
 	stock_trades.setdefault(bank,trades)
 
 stocks = {}
@@ -132,11 +156,22 @@ for bank in stocks.keys():
 			VOL = math.pow((math.log(highest,math.e) - math.log(lowest,math.e)),2)/(4 * math.log(2,math.e))
 		data2.append(VOL)
 
-		#日收益率
+		#上证日收益率
 		if(i > 0):
 			if(dstr in sz_trades.keys()):
 				endprice = sz_trades[dstr][0]
 				lastendprice = sz_trades[dstr][1]
+				data2.append(math.log((endprice / lastendprice),math.e))
+			else:
+				data2.append(0)
+		else:
+			data2.append(0)
+
+		#日收益率
+		if(i > 0):
+			if(dstr in trades.keys()):
+				endprice = float(trades[dstr][4])
+				lastendprice = float(trades[dstr][11])
 				data2.append(math.log((endprice / lastendprice),math.e))
 			else:
 				data2.append(0)
@@ -201,16 +236,20 @@ def exists_date(dstr):
 
 dates = {}
 i = 0
-print("日期,日内波动率,日收益率,简单情感指数,看涨,意见分散指数,影响力指数,总评论数,平均每篇的字数,发帖量,实际涨跌,涨跌幅,上证指数")	
+print("日期,日内波动率,上证日收益率,日收益率,简单情感指数,看涨,意见分散指数,影响力指数,总评论数,平均每篇的字数,发帖量,实际涨跌,涨跌幅,上证指数")	
 for bank in stocks2.keys():
-	print(bank+"---------------------------------------------------------------------")
+	# print(bank+"---------------------------------------------------------------------")
+	lines = []
+	lines.append("日期,日内波动率,上证日收益率,日收益率,简单情感指数,看涨,意见分散指数,影响力指数,总评论数,平均每篇的字数,发帖量,实际涨跌,涨跌幅,上证指数")
 	datas = stocks2[bank]
 	for dstr in datas.keys():
-		if(not exists_date(dstr)):
-			continue
+		# if(not exists_date(dstr)):
+		# 	continue
 		strs = ''
 		for d in datas[dstr]:
 			strs+=","+str(d)
 		print(dstr+strs)
+		lines.append(dstr+strs)
 		i+=1
+	save2txt(bank+"_dayrate",lines)
 print(i)
