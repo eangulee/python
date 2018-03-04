@@ -103,8 +103,8 @@ def main():
 	print('start')
     # 数据保存路径
 	time = re.sub(r'[^0-9]','_',str(datetime.datetime.now()))
-	intput_file = '/Users/eangulee/Desktop/python/finace/data/stock_info_2017_07_23_16_56_17_457459.txt'
-	output_file = '/Users/eangulee/Desktop/python/finace/data/stock_list_{0}.txt'.format(time)
+	intput_file = 'data/stock_info_2018_03_04_01_05_36_174000.txt'
+	output_file = 'data/stock_pe_list_{0}.txt'.format(time)
 	print(output_file)
 	decodePE(intput_file,output_file)
 	print('over')

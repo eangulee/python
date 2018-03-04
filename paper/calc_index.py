@@ -6,6 +6,7 @@ import xlrd
 import math
 import csv
 import os
+<<<<<<< HEAD
 
 def save2csv(csvName,list):
 	path = './sz50/' + csvName + '.csv'
@@ -26,6 +27,8 @@ def save2txt(fileName,list):
 	ofile = open(path, 'w',encoding='utf-8')
 	for l in list:
 		ofile.write(l+"\n")
+=======
+>>>>>>> 3710bf0a292c58abd56c6d472a6c44b49ae7e85f
 
 def getcsv(csvname):
 	lines = []
@@ -39,6 +42,26 @@ def gettxt(filepath):
 	f = open(filepath,"r",encoding='utf-8')
 	lines = f.readlines() #读取全部内容
 	return lines
+
+def save2csv(csvName,list):
+	path = './sz50/' + csvName + '.csv'
+	if os.path.exists(path):
+		os.remove(path)
+	print(path)
+	csvFile = open(path, 'w',encoding='utf-8',newline='')
+	writer = csv.writer(csvFile)
+	# writer.writerow(('标题','阅读','评论','字数','影响力','时间'))
+	for l in list:
+		writer.writerow(l)
+
+def save2txt(fileName,list):
+	path = './sz50/' + fileName + '.csv'
+	if os.path.exists(path):
+		os.remove(path)
+	print(path)
+	ofile = open(path, 'w',encoding='utf-8')
+	for l in list:
+		ofile.write(l+"\n")
 
 #上证指数汇总
 sz_trades = {}
@@ -65,7 +88,7 @@ for i in range(nrows)[2:nrows-1]:
 # 	sz_bank_trades.setdefault(dstr,table.cell(i,2).value)
 
 # banks = ["中国银行","工商银行","交通银行","农业银行","浦发银行","招商银行","建设银行"]
-xlsfile = r'D:\python\paper\sz50.xlsx' # 上证50股票名单
+xlsfile = r'sz50.xlsx' # 上证50股票名单
 data = xlrd.open_workbook(xlsfile)
 table = data.sheets()[0]          #通过索引顺序获取
 # cols = table.col_values(2)
@@ -80,12 +103,20 @@ for bank in banks:
 	lines = getcsv(csvpath)
 	trades = {}	
 	i = 1
+<<<<<<< HEAD
 	for line in lines[2:]:
 		dstr = line[0]
 		#增加上个交易日的收盘价
 		line.append(lines[i][4])
 		trades.setdefault(dstr,line)
 		i = i + 1
+=======
+	for line in lines[2:len(lines)-1]:
+		dstr = line[0]
+		line.append(lines[i][4])
+		trades.setdefault(dstr,line)
+		i+=1
+>>>>>>> 3710bf0a292c58abd56c6d472a6c44b49ae7e85f
 	stock_trades.setdefault(bank,trades)
 
 stocks = {}
@@ -157,7 +188,7 @@ for bank in stocks.keys():
 			VOL = math.pow((math.log(highest,math.e) - math.log(lowest,math.e)),2)/(4 * math.log(2,math.e))
 		data2.append(VOL)
 
-		#日收益率
+		#上证日收益率
 		if(i > 0):
 			if(dstr in sz_trades.keys()):
 				endprice = sz_trades[dstr][0]
@@ -168,7 +199,11 @@ for bank in stocks.keys():
 		else:
 			data2.append(0)
 
+<<<<<<< HEAD
 		#单只股票的日收益率
+=======
+		#日收益率
+>>>>>>> 3710bf0a292c58abd56c6d472a6c44b49ae7e85f
 		if(i > 0):
 			if(dstr in trades.keys()):
 				endprice = float(trades[dstr][4])
@@ -240,6 +275,11 @@ i = 0
 print("日期,日内波动率,上证日收益率,日收益率,简单情感指数,看涨,意见分散指数,影响力指数,总评论数,平均每篇的字数,发帖量,实际涨跌,涨跌幅,上证指数")	
 for bank in stocks2.keys():
 	# print(bank+"---------------------------------------------------------------------")
+<<<<<<< HEAD
+=======
+	lines = []
+	lines.append("日期,日内波动率,上证日收益率,日收益率,简单情感指数,看涨,意见分散指数,影响力指数,总评论数,平均每篇的字数,发帖量,实际涨跌,涨跌幅,上证指数")
+>>>>>>> 3710bf0a292c58abd56c6d472a6c44b49ae7e85f
 	datas = stocks2[bank]
 	lines = []
 	lines.append("日期,日内波动率,上证日收益率,日收益率,简单情感指数,看涨,意见分散指数,影响力指数,总评论数,平均每篇的字数,发帖量,实际涨跌,涨跌幅,上证指数")
@@ -252,5 +292,9 @@ for bank in stocks2.keys():
 		print(dstr+strs)
 		lines.append(dstr+strs)
 		i+=1
+<<<<<<< HEAD
 	save2txt(bank+"_calc",lines)
+=======
+	save2txt(bank+"_dayrate",lines)
+>>>>>>> 3710bf0a292c58abd56c6d472a6c44b49ae7e85f
 print(i)
