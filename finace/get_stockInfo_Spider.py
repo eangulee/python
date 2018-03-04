@@ -16,7 +16,7 @@ def getHTMLtext(url, code="utf-8"):
 		return ""  
   
   
-def getStockList(list,stockURL):  
+def getStockList(list,stockURL,filePath):  
 	html = getHTMLtext(stockURL,"GB2312")  
 	print("getstockList start")  
 	soup = BeautifulSoup(html,'html.parser')  
@@ -32,7 +32,9 @@ def getStockList(list,stockURL):
 			# urls = re.findall(r"[s][hz]\d{6}",href)
 			# print(urls)
 			# list.append(re.findall(r"[s][hz]\d{6}",href)[0])  
-			if len(urls) > 0:				
+			if len(urls) > 0:
+				with open(filePath,'a',encoding='utf-8') as f:  
+					f.write(i.text+'  '+urls[0] + '\n')  
 				print(i.text+'  '+urls[0])
 				list.append(urls[0])
 		except:  
@@ -47,14 +49,14 @@ def getStockInfo(list,stockURL,filePath):
 		try:  
 			if html=="":  
 				continue  
-  
+
 			infoDict = {}  
 			soup = BeautifulSoup(html,"html.parser")  
 			stockInfo = soup.find('div',attrs={'class':'stock-bets'})  
   
 			name = stockInfo.find_all(attrs={'class':'bets-name'})[0]  
 			infoDict.update({'股票名称': name.next.split()[0]})  
-  			infoDict['股票代码'] = stock
+			infoDict['股票代码'] = stock
   			
 			keylist =stockInfo.find_all('dt')  
 			vauleList = stockInfo.find_all('dd')  
@@ -81,13 +83,14 @@ def main():
 	stock_list_url='http://quote.eastmoney.com/stocklist.html'  
 	# 从百度获取股票详情
 	stock_info_url = 'https://gupiao.baidu.com/stock/'  
-	# output_file = 'D:/BaiduStockInfo.txt'  
 	# 数据保存路径
 	time = re.sub(r'[^0-9]','_',str(datetime.datetime.now()))
-	output_file = '/Users/eangulee/Desktop/python/finace/data/stock_info_{0}.txt'.format(time)
-	print(output_file)
+	stocks_path = "data/stocks_{0}.txt".format(time)	
+	print(stocks_path)
 	slist=[]  
-	getStockList(slist,stock_list_url)  
+	getStockList(slist,stock_list_url,stocks_path)
+	output_file = 'data/stock_info_{0}.txt'.format(time)
+	print(output_file)
 	getStockInfo(slist,stock_info_url,output_file)  
 	print("end")  
   
