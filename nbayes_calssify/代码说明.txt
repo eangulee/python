@@ -1,7 +1,0 @@
-1.本实验使用python语言进行朴素贝叶斯分类器的实现，并通过5倍交叉验证计算准确率
-2.使用词集模型和词袋模型两种方法进行词向量表示
-3.实现了3种特征选择方法：IG、MI和WLLR
-4.nbayes.py文件是主程序模块。
-5.nbayes_classify.py是可执行程序，用于对测试数据进行分类
-6.nbayes_validate.py是可执行程序，用于对分类进行五倍交叉验证
-7.在本地，数据集文件分别存放在D:\Lab\Courses\ML\Assignment-1\dataset\negative.txt和D:\Lab\Courses\ML\Assignment-1\dataset\positive.txt下
