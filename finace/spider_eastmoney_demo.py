@@ -38,13 +38,14 @@ def getStockList(list,stockURL):
                 list.append(urls[0])
         except:  
             continue  
-  
+    
+    print("getstockList count:"+str(len(list))) 
   
 def getStockInfo(list,stockURL,filePath):  
     count = 0  
     for stock in list:  
         url = stockURL + stock +".html"  
-        html =getHTMLtext(url)  
+        html = getHTMLtext(url)  
         try:  
             if html=="":  
                 continue  
@@ -57,19 +58,23 @@ def getStockInfo(list,stockURL,filePath):
             infoDict.update({'股票名称': name.next.split()[0]})  
   
             keylist =stockInfo.find_all('dt')  
-            vauleList = stockInfo.find_all('dd')  
+            valueList = stockInfo.find_all('dd')  
             for i in range(len(keylist)):  
-                key = keylist[i].text  
-                vaule = vauleList[i].text  
-                infoDict[key] = vaule  
-            print(json.JSONEncoder().encode(infoDict))
+                key = keylist[i].text
+                # print(key)
+                value = valueList[i].text
+                # print(value)  
+                infoDict[key] = value
+            #python3 默认是unicode编码
+            content = json.JSONEncoder().encode(infoDict).encode('utf8').decode('unicode_escape')
+            print(content)
             with open(filePath,'a',encoding='utf-8') as f:  
-                f.write(json.JSONEncoder().encode(infoDict) + '\n')  
+                f.write(content + '\n')  
                 count = count+1  
-                print("\r当前进度: {:.2f}%".format(count*100/len(list)),end="")
+                print("\r当前进度: {:.2f}%\n".format(count*100/len(list)),end="")
         except:# IOError as e:
             count = count +1  
-            print("\r当前进度: {:.2f}%".format(count*100/len(list)),end="")  
+            print("\r当前进度: {:.2f}%\n".format(count*100/len(list)),end="")  
             continue  
   
   
@@ -83,10 +88,10 @@ def main():
     # output_file = 'D:/BaiduStockInfo.txt'  
     # 数据保存路径
     time = re.sub(r'[^0-9]','_',str(datetime.datetime.now()))
-    output_file = '/Users/eangulee/Desktop/python/finace/data/stock_info_{0}.txt'.format(time)
+    output_file = 'D:/python/python/finace/data/stock_info_{0}.txt'.format(time)
     print(output_file)
     slist=[]  
-    getStockList(slist,stock_list_url)  
+    getStockList(slist,stock_list_url)
     getStockInfo(slist,stock_info_url,output_file)  
     print("end")  
   
