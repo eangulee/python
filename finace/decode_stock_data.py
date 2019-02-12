@@ -3,6 +3,10 @@ import re
 import datetime  
 import json
 import sys
+import io
+import sys  
+reload(sys)   
+sys.setdefaultencoding('utf8')
 
 def decodePE(filePath,targetFilePath):
 	pe_10 = []
@@ -10,11 +14,16 @@ def decodePE(filePath,targetFilePath):
 	pe_20 = []
 	pe_all = []
 	# Reading data back
-	with open(filePath, 'r',encoding='utf-8') as f:
+	with open(filePath, 'r') as f:
 		for line in f:
 			text = line.replace('\'','\"')
-			data = json.JSONDecoder().decode(text)
-			# print(data)
+			text = text.strip()
+			# print(type(text))
+			tempdata = json.JSONDecoder().decode(text)
+			data = {}
+			for k, v in tempdata.items():
+				data[k.decode('utf-8').encode('utf-8')] = v
+			print(data)
 			try:
 				pe = float(data['市盈率MRQ'])
 				if(pe > 0 and pe <= 10):
@@ -61,7 +70,7 @@ def decodePE(filePath,targetFilePath):
 			print(d)
 			f.write(str(d)+ '\n')
 	'''
-	with open(targetFilePath,'a',encoding='utf-8') as f:
+	with open(targetFilePath,'a') as f:
 		print('10倍pe总计：{0}只:'.format(len(pe_10)))
 		f.write('10倍pe总计：{0}只:'.format(len(pe_10)) + '\n')
 		for i in range(len(pe_10)):
@@ -103,7 +112,7 @@ def main():
 	print('start')
     # 数据保存路径
 	time = re.sub(r'[^0-9]','_',str(datetime.datetime.now()))
-	intput_file = 'data/stock_info_2018_03_04_01_05_36_174000.txt'
+	intput_file = 'data/stock_info_2019_02_11_23_51_37_026636.txt'
 	output_file = 'data/stock_pe_list_{0}.txt'.format(time)
 	print(output_file)
 	decodePE(intput_file,output_file)
