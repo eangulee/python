@@ -59,3 +59,22 @@ def calcAvgGrowthRate(profits):
 	avg = (total / years)
 
 	return avg
+
+# 计算公司永久价值
+def calcInterValue(currentFlow,growthRate,discountRate,years = 10,longGrowthRate=0.03):
+	total = 0
+	discount = 0
+	for i in range(years):
+		#先计算前十年每年的现金流 未来现金流 = (1+增长率)^年X初始现金流
+		flow = currentFlow * math.pow(1+growthRate,i+1)
+		print "未来第"+str(i+1)+"年现金流："+str(flow)
+		#再计算这十年的现金流贴现 现金流贴现=未来现金流X【1／(1+贴现率^年数)
+		discount = flow * (1/math.pow(1+discountRate,i+1))
+		print "未来第"+str(i+1)+"年现金流贴现："+str(flow)
+		total = total + discount
+	print "未来10年的现金流贴现加总："+str(total)
+	#计算并贴现永久价值 永久价值=【第5年或第10年的现金流x(1+预期增长率)】/（贴现率 – 预期增长率）  预期增长率假定为3%
+	forever = (discount * (1+longGrowthRate))/(discountRate-longGrowthRate)
+	foreverDiscount = forever * (1/math.pow(1+discountRate,years))
+	total = total + foreverDiscount
+	print "企业总的现值："+str(total)
