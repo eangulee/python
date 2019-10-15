@@ -1,5 +1,8 @@
 import random
 from sympy import *
+import numpy as np
+import matplotlib.pyplot as plt
+import math
 #montecarlo 求定积分
 def calpai():
     n = 1000000
@@ -42,7 +45,37 @@ def integral1():
     v = integrate(f,(x,0.0,1.0)) 
     print(v)
 
+# integrate ln
+def integral_ln():
+     a = 1
+     b = 2
+     x = symbols("x")
+     # ln 的导数是 1/x
+     f = 1 / x
+     v = integrate(f ,(x,1.0,2.0))
+     print("integrate:",v)
+     print("ln2 - ln1 = ",(math.log(2)))
+
+# montecarlo calc ln
+def montecarlo_ln():
+    n = 1000000
+    x_min, x_max = 1.0, 2.0
+    y_min, y_max = 0.0, 1.0
+
+    count = 0
+    for i in range(0, n):
+        x = random.uniform(x_min, x_max)
+        y = random.uniform(y_min, y_max)
+        # 1/x > y，表示该点位于曲线的下面。所求的积分值即为曲线下方的面积与正方形面积的比。
+        if 1 / x > y:
+            count += 1
+
+    integral_value = count / float(n)
+    print(integral_value)
+
 if __name__ == '__main__':
-    calpai()
-    integral()
-    integral1()
+    # calpai()
+    # integral()
+    # integral1()
+    integral_ln()
+    montecarlo_ln()
